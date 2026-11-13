@@ -22,6 +22,14 @@ def product(factors):
   values=values+aligned.reshape(tuple(2 if v in ordered else 1 for v in variables))
  return LogFactor(variables,np.asarray(values,dtype=np.float64))
 
+def weight_factors(weights):
+ """Non-negative relative credibility factors; only ratios matter, so the zero point is arbitrary."""
+ factors=[]
+ for ident,(w0,w1) in sorted(weights.items()):
+  values=np.array([np.log(w0) if w0>0 else -np.inf,np.log(w1) if w1>0 else -np.inf],dtype=np.float64)
+  factors.append(LogFactor((ident,),values))
+ return factors
+
 def cpt_factors(nodes,rows):
  factors=[]
  for node in nodes:

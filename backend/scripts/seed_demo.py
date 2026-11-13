@@ -13,7 +13,7 @@ from src.models.run import InferenceRun
 from src.models.review import EvidenceReview
 from src.models.report import Report
 from src.utils.security import hash_password
-from src.services.network_validation import validate_cpt,validate_evidence
+from src.services.network_validation import validate_cpt,validate_evidence,validate_weights
 from src.services.run_service import compute
 from scripts.demo_data import DEMO_NODES,DEMO_CPT,HAND_NODES,HAND_CPT,TINY_NODES,TINY_CPT
 
@@ -30,9 +30,9 @@ def seed():
    if not db.get(CptRevision,rid):
     db.add(CptRevision(id=rid,name=name+' / CPT r1',network_id=ident,version='r1',description='按parents顺序列出完整父配置；固定版本不可覆盖。'));db.flush()
     for i,row in enumerate(validate_cpt(nodes,cpt)):db.add(CptRow(id=rid+'-'+str(i),revision_id=rid,**row))
-  cases=[('demo-case','温升与告警联合证据','demo-revision','Fault',{'Heat':1,'Alarm':1},DEMO_NODES),('hand-case','S1后的F手算后验','hand-revision','F',{'S':1},HAND_NODES),('tiny-case','两项1e-200证据仍可行','tiny-revision','Q',{'A':1,'B':1},TINY_NODES),('zero-case','零概率反例：Fault0与Lock1','demo-revision','Fault',{'Fault':0,'Lock':1},DEMO_NODES),('observed-case','已观测目标先检查证据','demo-revision','Fault',{'Fault':1,'Alarm':1},DEMO_NODES)]
-  for ident,name,rid,target,evidence,nodes in cases:
-   if not db.get(EvidenceCase,ident):db.add(EvidenceCase(id=ident,name=name,revision_id=rid,target=target,evidence=evidence,candidates=validate_evidence(nodes,evidence,target)))
+  cases=[('demo-case','温升与告警联合证据','demo-revision','Fault',{'Heat':1,'Alarm':1},DEMO_NODES,None),('hand-case','S1后的F手算后验','hand-revision','F',{'S':1},HAND_NODES,None),('tiny-case','两项1e-200证据仍可行','tiny-revision','Q',{'A':1,'B':1},TINY_NODES,None),('zero-case','零概率反例：Fault0与Lock1','demo-revision','Fault',{'Fault':0,'Lock':1},DEMO_NODES,None),('observed-case','已观测目标先检查证据','demo-revision','Fault',{'Fault':1,'Alarm':1},DEMO_NODES,None),('soft-case','倾向评分的软证据：Heat倾向1','demo-revision','Fault',{'Alarm':1},DEMO_NODES,{'Heat':[1,3]})]
+  for ident,name,rid,target,evidence,nodes,weights in cases:
+   if not db.get(EvidenceCase,ident):db.add(EvidenceCase(id=ident,name=name,revision_id=rid,target=target,evidence=evidence,weights=validate_weights(nodes,weights,evidence,target) or None,candidates=validate_evidence(nodes,evidence,target,None,weights)))
   db.flush()
   if not db.get(InferenceRun,'demo-run'):db.add(InferenceRun(id='demo-run',case_id='demo-case',status='queued',result={},error=''))
   db.commit();run=db.get(InferenceRun,'demo-run')

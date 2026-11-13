@@ -5,4 +5,5 @@ class CaseCreate(BaseModel):
  revision_id:str
  target:str
  evidence_json:str=Field(default='{}',max_length=5000)
+ weights_json:str|None=Field(default=None,max_length=5000)
  candidates_json:str=Field(default='null',max_length=5000)

@@ -42,12 +42,35 @@ def validate_cpt(nodes,rows):
  if seen!=expected:raise ValueError('CPT须完整覆盖每个节点的所有父配置')
  return sorted(clean,key=lambda r:(r['node_id'],r['parent_values']))
 
-def validate_evidence(nodes,evidence,target,candidates=None):
+def validate_weights(nodes,weights,evidence=None,target=None,allow_conflict=False):
+ ids={n['node_id'] for n in validate_network(nodes)['nodes']}
+ if weights is None:return {}
+ if not isinstance(weights,dict):raise ValueError('权重须为节点到[w0,w1]的映射')
+ clean={}
+ for ident,value in weights.items():
+  if ident not in ids:raise ValueError('权重含未知节点')
+  if target is not None and ident==target:raise ValueError('查询目标不能带软权重')
+  if not isinstance(value,(list,tuple)) or len(value)!=2:raise ValueError('权重须为[w0,w1]两元素数组')
+  entries=[]
+  for weight in value:
+   if isinstance(weight,bool) or not isinstance(weight,(int,float)):raise ValueError('权重须为非负有限数')
+   try:weight=float(weight)
+   except (ValueError,TypeError,OverflowError):raise ValueError('权重须为非负有限数')
+   if not math.isfinite(weight) or weight<0:raise ValueError('权重须为非负有限数')
+   entries.append(weight)
+  if entries[0]==0 and entries[1]==0:raise ValueError('权重两状态不得同时为0')
+  state=evidence.get(ident) if isinstance(evidence,dict) else None
+  if not allow_conflict and type(state) is int and state in (0,1) and entries[state]==0:raise ValueError('权重与确定证据冲突')
+  clean[ident]=entries
+ return dict(sorted(clean.items()))
+
+def validate_evidence(nodes,evidence,target,candidates=None,weights=None,allow_conflict=False):
  ids={n['node_id'] for n in validate_network(nodes)['nodes']}
  if target not in ids:raise ValueError('查询目标未知')
  if not isinstance(evidence,dict) or any(k not in ids or type(v) is not int or v not in (0,1) for k,v in evidence.items()):raise ValueError('证据须为已知节点的二元0/1映射')
- eligible=sorted(ids-set(evidence)-{target})
+ clean_weights=validate_weights(nodes,weights,evidence,target,allow_conflict)
+ eligible=sorted(ids-set(evidence)-{target}-set(clean_weights))
  if candidates is not None:
-  if not isinstance(candidates,list) or any(not isinstance(c,str) for c in candidates) or len(set(candidates))!=len(candidates) or any(c not in eligible for c in candidates):raise ValueError('候选须为未观测的非目标节点且不重复')
+  if not isinstance(candidates,list) or any(not isinstance(c,str) for c in candidates) or len(set(candidates))!=len(candidates) or any(c not in eligible for c in candidates):raise ValueError('候选须为未观测、未带权且非目标的节点且不重复')
   eligible=sorted(candidates)
  return eligible

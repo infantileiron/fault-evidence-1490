@@ -10,5 +10,7 @@ class BranchMetric(RecordMixin,Base):
  log_probability:Mapped[float|None]=mapped_column(Double,nullable=True)
  conditional_entropy:Mapped[float|None]=mapped_column(Double,nullable=True)
  log_evidence:Mapped[float|None]=mapped_column(Double,nullable=True)
+ log_normalizer:Mapped[float|None]=mapped_column(Double,nullable=True)
+ log_evidence_probability:Mapped[float|None]=mapped_column(Double,nullable=True)
  skipped_zero_probability:Mapped[bool]=mapped_column(Boolean)
  probability_underflow:Mapped[bool]=mapped_column(Boolean)

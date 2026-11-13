@@ -12,3 +12,7 @@ class InferenceRun(RecordMixin,Base):
  evidence_probability:Mapped[float|None]=mapped_column(Double,nullable=True)
  target_entropy:Mapped[float|None]=mapped_column(Double,nullable=True)
  evidence_underflow:Mapped[bool]=mapped_column(Boolean,default=False)
+ log_normalizer:Mapped[float|None]=mapped_column(Double,nullable=True)
+ normalizer_probability:Mapped[float|None]=mapped_column(Double,nullable=True)
+ normalizer_underflow:Mapped[bool]=mapped_column(Boolean,default=False)
+ weights:Mapped[dict|None]=mapped_column(JSON,nullable=True)

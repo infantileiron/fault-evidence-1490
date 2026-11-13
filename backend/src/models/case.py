@@ -8,4 +8,5 @@ class EvidenceCase(RecordMixin,Base):
  revision_id:Mapped[str]=mapped_column(ForeignKey("revisions.id"))
  target:Mapped[str]=mapped_column(String(32))
  evidence:Mapped[dict]=mapped_column(JSON)
+ weights:Mapped[dict|None]=mapped_column(JSON,nullable=True)
  candidates:Mapped[dict]=mapped_column(JSON)
